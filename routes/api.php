@@ -17,7 +17,9 @@
 
 Route::group(
     ['prefix' => 'v1'], function () {
-        Route::resource('categories', 'CategoryController');
+
+        Route::resource('categories', 'CategoryController', ['only' => ['index']]);
+        Route::middleware('auth:api')->resource('categories', 'CategoryController', ['except' => ['index']]);
 
         Route::get('getCategoryImages/{category}', 'APIController@getImages')->name('categoryImages');
         Route::get('getImage/{id}', 'APIController@getImage')->name('getImage');

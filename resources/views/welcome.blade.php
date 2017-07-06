@@ -8,7 +8,7 @@
 
       <title>Flick Image Category Management System</title>
 
-      <link rel="stylesheet" href="css/bootstrap.min.css">
+      <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
       <link rel="stylesheet" href="css/app.css">
 
       <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -36,13 +36,11 @@
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav navbar-right">
               <li class="dropdown">
-                  @if (Auth::check())
-                  <form method="post" action="logout" class="navbar-form navbar-left" id="logoutForm">
+                  <form method="POST" action="{{ route('logout') }}" class="navbar-form navbar-left" {!! (!Auth::check() ? 'style="display: none"' : '') !!} id="logoutForm">
                     <button type="submit" class="btn btn-default">Logout</button>
                     {{ csrf_field() }}
                   </form>
-                  @else
-                  <form  role="form" method="POST" action="{{ route('login') }}" class="navbar-form navbar-left" id="loginForm">
+                  <form  role="form" method="POST" action="{{ route('login') }}" class="navbar-form navbar-left"  {!! (Auth::check() ? 'style="display: none;"' : '') !!} id="loginForm">
                     <div class="form-group">
                       <input id="email" type="email" class="form-control" name="email" value="{{ old('email') }}" required placeholder="Username">
                       <input id="password" type="password" class="form-control" name="password" placeholder="Password" required>
@@ -60,23 +58,27 @@
                       </span>
                   @endif
                   </form>
-                  @endif
               </li>
             </ul>
           </div><!-- /.navbar-collapse -->
         </div><!-- /.container-fluid -->
       </nav>
-
       <div class="container">
         <div class="row">
           <div class="col-md-12">
-            <div id="errors"></div>
+            <div id="errors">
+              <noscript>
+                <div class="alert alert-warning alert-dismissible" role="alert">
+                  Warning: This site makes use of JavaScript, features will be broken without it. Please enable JavaScript.
+                </div>
+              </noscript>
+            </div>
           </div>
         </div>
         <div class="row">
           <div class="col-md-3">
-              <div class="categories list-group"></div>
-              <div class="addcategory">
+              <div class="list-group" id="categories"></div>
+              <div class="addcategory" style="display: none">
                 <div id="addplus">
                   <button type="button" class="btn btn-default" aria-label="Left Align">
                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add
@@ -123,8 +125,19 @@
           </div>
         </div>
 
-        <script src="/js/jquery-3.2.1.min.js"></script>
-        <script src="/js/bootstrap.min.js"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="/js/jquery-3.2.1.min.js"><\/script>')</script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script>window.jQuery.fn.modal || document.write('<script src="/js/bootstrap.min.js"><\/script>')</script>
+        <script>
+          (function($) {
+            $(function() {
+              if($('body').css('color') != 'rgb(51, 51, 51)'){
+                $('head').prepend('<link rel="stylesheet" href="/css/bootstrap.min.css">')
+              }
+            });
+          })(window.jQuery);
+        </script>
         <script src="/js/salvattore.min.js"></script>
         <script src="/js/project.js"></script>
     </body>

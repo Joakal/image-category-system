@@ -2,14 +2,14 @@
 
 namespace App\Repositories;
 
-interface CategoryInterface {
+interface CategoryInterface
+{
 
-  public function all();
+    public function all();
 
-  public function create($request);
+    public function create($request);
 
-  public function update($request, $id);
+    public function update($request, $id);
 
-  public function delete($id);
-
+    public function delete($id);
 }

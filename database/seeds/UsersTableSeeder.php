@@ -15,11 +15,13 @@ class UsersTableSeeder extends Seeder
       DB::table('users')->insert([
         [
           'email' => 'admin@example.com',
-          'password' => Hash::make('@nyth!ng')
+          'password' => Hash::make('@nyth!ng'),
+          'api_token' => str_random(60)
         ],
         [
           'email' => 'user@example.com',
-          'password' => Hash::make('password1')
+          'password' => Hash::make('password1'),
+          'api_token' => str_random(60)
         ],
       ]);
     }

@@ -37,5 +37,4 @@ class CategoryRepository implements CategoryInterface
 
         return $category->delete();
     }
-
 }

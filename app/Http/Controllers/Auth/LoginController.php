@@ -20,6 +20,22 @@ class LoginController extends Controller
 
     use AuthenticatesUsers;
 
+    // Custom override to allow AJAX authentication request
+    protected function authenticated(\Illuminate\Http\Request $request, $user)
+    {
+
+
+        if ($request->ajax()) {
+            return response()->json([
+            'auth' => auth()->check(),
+            'user' => $user,
+            'intended' => $this->redirectPath(),
+            ]);
+        } else {
+            return redirect()->intended($this->redirectPath());
+        }
+    }
+
     /**
      * Where to redirect users after login.
      *

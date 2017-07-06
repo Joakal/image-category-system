@@ -1,218 +1,305 @@
-/*
-$('#login').on('click', '#login', function (e) {
-e.preventDefault();
-alert('fail');
-$.ajax({
-        method: "POST",
-        url: "login",
-        data: $(this).serialize(),
-        async: true,
-         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-        }).done(function( msg ) {
-        if(msg.error == 0){
-            //$('.sucess-status-update').html(msg.message);
-            alert(msg.message);
-            alert('success');
-        }else{
-            alert(msg.message);
-            alert('fail');
-            //$('.error-favourite-message').html(msg.message);
-        }
-    });
-});
-
-$('body').on('click', '#logout', function (e) {
-e.preventDefault();
-if (confirm('Are you sure you want to logout?')) {
-    var id = $(this).attr('id');
-    $.ajax({
-        method: "POST",
-        url: "logout",
-         headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-        }).done(function( msg ) {
-        if(msg.error == 0){
-            //$('.sucess-status-update').html(msg.message);
-            alert(msg.message);
-        }else{
-            alert(msg.message);
-            //$('.error-favourite-message').html(msg.message);
-        }
-    });
-} else {
-    return false;
-}
-});
-
-$.ajaxSetup({
-    headers: {
-        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-    }
-});
-*/
-// $('#addcategory').on('click', '#addcategory', function (e) {
-// e.preventDefault();
-// alert('fail');
-// $.ajax({
-//         method: "POST",
-//         url: "login",
-//         data: $(this).serialize(),
-//         async: true,
-//          headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-//         }).done(function( msg ) {
-//         if(msg.error == 0){
-//             //$('.sucess-status-update').html(msg.message);
-//             alert(msg.message);
-//             alert('success');
-//         }else{
-//             alert(msg.message);
-//             alert('fail');
-//             //$('.error-favourite-message').html(msg.message);
-//         }
-//     });
-// });
-
 // Creating the virtual HTML categories that will come with flexibility of CRUD
-function generateCategoryHtml(data, active) {
-  var categoryGroupStart = '<li class="input-group' + active + '">';
-  var categoryGroupEnd = '</li>';
+var generateCategoryHtml = function(data, active) {
 
-  var categoryLink = '<a style="display: table-cell; vertical-align: middle; " class="list-group-item-text categoryitem" href="#" id="' +
-    data._id + '" >' +
-    data.name +
-    '</a>';
+  var categoryGroup = document.createElement('li'),
+    categoryLink = document.createElement('a'),
+    categoryEditInput = document.createElement('input'),
+    categoryControls = document.createElement('div'),
+    categoryType = '',
+    categorySpan = '',
+    categoryControlTypes = [
+      ['edit', 'glyphicon-pushpin'],
+      ['delete', 'glyphicon-trash'],
+      ['submit', 'glyphicon-ok'],
+      ['cancel', 'glyphicon-remove']
+    ];
 
-  var categoryEditInput = '<input type="text" class="form-control category-input" value="' +
-    data.name +
-    '">';
+  // Highlight if current category is selected
+  if (active) {
+    categoryGroup.className = 'input-group active';
+  } else {
+    categoryGroup.className = 'input-group';
+  }
 
-  var categoryEditControls = '<div class="input-group-btn">' +
-    '<button type="button" class="btn category-edit">' +
-    '<span class="glyphicon glyphicon-pushpin" aria-hidden="true"></span>' +
-    '</button>' +
-    '<button type="button" class="btn category-delete">' +
-    '<span class="glyphicon glyphicon-trash" aria-hidden="true"></span>' +
-    '</button>' +
-    '<button type="button" class="btn category-submit">' +
-    '<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>' +
-    '</button>' +
-    '<button type="button" class="btn category-cancel">' +
-    '<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>' +
-    '</button>' +
-    '</div>';
+  // Generate the 'link' to the category of images
+  categoryLink.className = 'list-group-item-text list-group-item categoryitem'
+  categoryLink.href = '#';
+  categoryLink.setAttribute('id', data._id);
+  categoryLink.text = data.name;
+  categoryLink.style = 'display: table-cell; vertical-align: middle;';
+  categoryLink.onclick = viewCategory;
 
-  return categoryGroupStart + categoryLink + categoryEditInput + categoryEditControls + categoryGroupEnd;
+  categoryGroup.appendChild(categoryLink);
+
+  // Generate an input field for editing the category
+  categoryEditInput.type = 'text';
+  categoryEditInput.className = 'form-control category-input';
+  categoryEditInput.value = data.name;
+
+  categoryGroup.appendChild(categoryEditInput);
+
+  categoryControls.className = 'input-group-btn';
+  if (!localStorage.getItem('token')) {
+    categoryControls.style = 'display: none;';
+  }
+
+  /*
+   * For each button, apply the relevant functions. ie, submit = edit category.
+   */
+  $.each(categoryControlTypes, function(i, item) {
+    categoryType = document.createElement('button');
+    categoryType.className = 'btn category-' + item[0];
+    categorySpan = document.createElement('span');
+    categorySpan.className = 'glyphicon ' + item[1];
+    categoryType.appendChild(categorySpan);
+
+    if (item[0] === 'submit') {
+      categoryType.onclick = editCategory;
+    } else if (item[0] === 'delete') {
+      categoryType.onclick = deleteCategory;
+    } else {
+      categoryType.onclick = toggleEditCategory;
+    }
+
+    categoryControls.appendChild(categoryType);
+  });
+
+  categoryGroup.appendChild(categoryControls);
+  return categoryGroup;
 }
+
+
 
 // This function builds the gallery. Based on salvattore plugin.
-function append(picture, id) {
+var buildGallery = function(picture, id) {
   // build/select our elements
-  var grid = document.querySelector('#grid');
-  var item = document.createElement('div');
-  // build the html
-  var h = '<div class="panel panel-primary">';
-  h += '<div class="panel-body">';
-  h += '<img id="' + id + '" src="';
-  h += picture;
-  h += '"/>'
-  h += '</div>';
-  h += '</div>';
-  salvattore['append_elements'](grid, [item])
-  item.outerHTML = h;
+  var grid = document.querySelector('#grid'),
+    item = document.createElement('div'),
+    item1 = document.createElement('div'),
+    item2 = document.createElement('div'),
+    item3 = document.createElement('img');
+
+  item1.className = 'panel panel-primary';
+  item2.className = 'panel-body';
+  item3.id = id;
+  item3.src = picture;
+
+  item2.appendChild(item3);
+  item1.appendChild(item2);
+
+  salvattore.appendElements(grid, [item1]);
+}
+
+var displayError = function(err) {
+
+  var errDiv = document.createElement('div'),
+    errButton = document.createElement('button'),
+    errSpan = document.createElement('span');
+
+  errSpan.setAttribute('aria-label', 'true');
+  errSpan.innerHTML = '&times;';
+
+  errButton.appendChild(errSpan);
+  errButton.className = 'close';
+  errButton.setAttribute('data-dismiss', 'alert');
+  errButton.setAttribute('aria-label', 'Close');
+
+  errDiv.appendChild(errButton);
+  errDiv.className = 'alert alert-warning alert-dismissible';
+  errDiv.setAttribute('role', 'alert');
+  errDiv.append(document.createTextNode(err));
+
+  $('#errors').append(errDiv);
+
 }
 
 // Generic function to make an AJAX call
 var fetchData = function(method, dataURL, query) {
+
   return $.ajax({
     type: method,
     data: query,
     dataType: 'json',
+    headers: {
+      'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content'),
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
     url: dataURL
   });
 }
 
-// Reload all categories from the database
-function refreshCategories() {
-  var localAPI = "api/v1/categories";
-  var method = "GET";
-  var data = {};
+var toggleEditCategory = function() {
+  $(this).parent().parent().find('.categoryitem').toggle();
+  $(this).parent().find('.category-edit').toggle();
+  $(this).parent().find('.category-delete').toggle();
+  $(this).parent().find('.category-submit').toggle();
+  $(this).parent().find('.category-cancel').toggle();
+  $(this).parent().parent().find('.category-input').toggle();
+}
+
+// Toggle add category
+var toggleAddCategory = function() {
+  $("#addcate").toggle();
+  $("#addplus").toggle();
+}
+
+// Show add category
+var showAddCategory = function() {
+  $("#addcate").show();
+  $("#addplus").show();
+}
+// Hide add category
+var hideAddCategory = function() {
+  $("#addcate").hide();
+  $("#addplus").hide();
+}
+
+// Call the Flickr API and return pictures
+var viewCategory = function(e) {
+
+  var categoryLink = this,
+    name = categoryLink.text,
+    localAPI = "api/v1/getCategoryImages/" + name,
+    method = "GET",
+    data = {
+      tagmode: "any",
+      format: "json"
+    };
+  var url = "";
 
   // Make AJAX call/s
   var result = fetchData(method, localAPI, data);
 
   $.when(result)
     .done(function(data) {
-      $('.categories').empty(); // remove everything
-      $('.categories').append('<ul></ul>');
-      for (var i = 0; i < data.length; i++) {
-        if (i === 0) {
-          active = " active"
-        } else {
-          active = ""
-        };
-        $('.categories ul').append(
-          generateCategoryHtml(data[i], active)
-        );
+      $('.column').empty();
+      $.each(data.photos.photo, function(i, item) {
+        url = "//farm" + item.farm + ".staticflickr.com/" + item.server + "/" + item.id + "_" + item.secret + "_m.jpg";
+        buildGallery(url, item.id);
+
+      });
+
+      // Assign onclick events
+      // Allow a user to view an image
+      var imagesAmount = $('#grid').find('.panel-primary').length;
+      var viewImages = $('#grid').find('.panel-body img');
+
+      for (var i = 0; i < imagesAmount; i++) {
+
+        viewImages[i].onclick = viewImage;
       }
+      // Highlight current category
+      $('.categories').find('.active').removeClass('active');
+      categoryLink.className += ' active';
+
+      // Show the image category grid and hide the standalone modal if any
+      $('.standalone').hide();
+      $('#grid').show();
+
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      var errMsg = "Error: We could not get that category. ";
+      if (jqXHR.responseJSON) {
+        $.each(jqXHR.responseJSON, function(i, item) {
+          displayError(errMsg + item);
+        });
+      } else {
+        displayError(errMsg + errorThrown);
+      }
+    });
+
+}
+
+// Reload all categories from the database
+var refreshCategories = function() {
+
+  var localAPI = "api/v1/categories",
+    method = "GET",
+    data = {},
+    tempArray = [];
+
+  // Make AJAX call/s
+  var result = fetchData(method, localAPI, data);
+
+  $.when(result)
+    .done(function(data) {
+      $('#categories').empty(); // remove everything
+      var iLength = data.length;
+      var categoriesList = document.getElementById('categories');
+      var ul = document.createElement('ul');
+
+      for (var i = 0; i < iLength; i++) {
+        if (i === 0) {
+          active = true;
+        } else {
+          active = false;
+        };
+        ul.appendChild(generateCategoryHtml(data[i], active));
+
+      }
+      categoriesList.appendChild(ul);
       //Lets hide some of the generated category fields
       $('.category-submit').hide();
       $('.category-cancel').hide();
       $('.category-input').hide();
-    });
 
-}
 
-// Call the Flickr API and return pictures
-function viewCategory(name) {
 
-  var localAPI = "api/v1/getCategoryImages/" + name;
-  var method = "GET";
-  var data = {
-    tagmode: "any",
-    format: "json"
-  };
-  var url = "";
-
-  // Make AJAX call/s
-  var result = fetchData(method, localAPI, data);
-
-  $.when(result)
-    .done(function(data) {
-      if (data) {
-        $('.column').empty();
-        $.each(data.photos.photo, function(i, item) {
-          url = "https://farm" + item.farm + ".staticflickr.com/" + item.server + "/" + item.id + "_" + item.secret + "_m.jpg";
-          append(url, item.id);
-
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      var errMsg = "Error: We could not get the current list of categories. ";
+      if (jqXHR.responseJSON) {
+        $.each(jqXHR.responseJSON, function(i, item) {
+          displayError(errMsg + item);
         });
-        $('standalone').hide();
+      } else {
+        displayError(errMsg + errorThrown);
       }
     });
+
+
 }
 
-// Call the Flickr API by id and return one picture
-function viewImage(id) {
 
-  var localAPI = "api/v1/getImage/" + id;
-  var method = "GET";
-  var data = {
-    tagmode: "any",
-    format: "json"
-  };
-  var url = "";
+
+// Call the Flickr API by id and return one picture
+var viewImage = function() {
+
+  var id = $(this).attr('id'),
+    localAPI = "api/v1/getImage/" + id,
+    method = "GET",
+    data = {
+      tagmode: "any",
+      format: "json"
+    },
+    url = "";
 
   // Make AJAX call/s
   var result = fetchData(method, localAPI, data);
 
   $.when(result)
     .done(function(data) {
+
+      $('.standalone').toggle();
+      $('#grid').toggle();
       item = data.photo;
 
-      url = "https://farm" + item.farm + ".staticflickr.com/" + item.server + "/" + item.id + "_" + item.secret + "_z.jpg";
+      url = "//farm" + item.farm + ".staticflickr.com/" + item.server + "/" + item.id + "_" + item.secret + "_z.jpg";
       $(".image-title").html(item.title._content);
       $(".image-description").html(item.description._content);
       $(".image-url").attr('href', item.urls.url[0]._content);
       $(".standalone-image").attr('src', url);
 
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      var errMsg = "Error: We could not get information on that image. ";
+      if (jqXHR.responseJSON) {
+        $.each(jqXHR.responseJSON, function(i, item) {
+          displayError(errMsg + item);
+        });
+      } else {
+        displayError(errMsg + errorThrown);
+      }
     });
 
 
@@ -220,12 +307,12 @@ function viewImage(id) {
 
 
 // Create a new category with a name
-function createCategory(name) {
-  var localAPI = "api/v1/categories";
-  var method = "POST";
-  var data = {
-    name: name
-  };
+var createCategory = function(name) {
+  var localAPI = "api/v1/categories",
+    method = "POST",
+    data = {
+      name: name
+    };
 
   // Make AJAX call/s
   var result = fetchData(method, localAPI, data);
@@ -234,27 +321,34 @@ function createCategory(name) {
     .done(function(data) {
       refreshCategories();
     })
-    .fail(function(data) {
-      // display red warning
-      var errorsHtml = "";
-      $.each(data.responseJSON, function(key, value) {
-        errorsHtml += '<li>' + value[0] + '</li>'; //showing only the first error.
-      });
-      $('#errors').html('<div class="alert alert-danger" role="alert"><ul>' + errorsHtml + '</ul></div>');
-      $("#errors").fadeTo(4000, 500).slideUp(500, function() {
-        $("#errors").slideUp(500);
-      });
-      return false;
-
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      var errMsg = "Error: We could not create the category. ";
+      if (jqXHR.responseJSON) {
+        $.each(jqXHR.responseJSON, function(i, item) {
+          displayError(errMsg + item);
+        });
+      } else {
+        displayError(errMsg + errorThrown);
+      }
     });
 }
 
-// Delete a category by ID
-function deleteCategory(id) {
+// Delete a category
+var deleteCategory = function() {
 
-  var localAPI = "api/v1/categories/" + id;
-  var method = "DELETE";
-  var data = {};
+  var deleteButton = this,
+    nameInput = $(this).parent().parent().find('a').text(),
+    id = $(this).parent().parent().find('a').attr('id'),
+
+    localAPI = "api/v1/categories/" + id,
+    method = "DELETE",
+    data = {};
+
+  if (!confirm('Are you sure you want to delete ' + nameInput + ' category?')) {
+
+    return;
+
+  }
 
   // Make AJAX call/s
   var result = fetchData(method, localAPI, data);
@@ -263,30 +357,32 @@ function deleteCategory(id) {
     .done(function(data) {
       refreshCategories();
     })
-    .fail(function(data) {
-      // display red warning
-      var errorsHtml = "";
-      $.each(data.responseJSON, function(key, value) {
-        errorsHtml += '<li>' + value[0] + '</li>'; //showing only the first error.
-      });
-      $('#errors').html('<div class="alert alert-danger" role="alert"><ul>' + errorsHtml + '</ul></div>');
-      $("#errors").fadeTo(4000, 500).slideUp(500, function() {
-        $("#errors").slideUp(500);
-      });
-      return false;
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      var errMsg = "Error: We could not create the category. ";
+      if (jqXHR.responseJSON) {
+        $.each(jqXHR.responseJSON, function(i, item) {
+          displayError(errMsg + item);
+        });
+      } else {
+        displayError(errMsg + errorThrown);
+      }
     });
 
 }
 
 // Edit a category
 // id, name
-function editCategory(id, name) {
+var editCategory = function() {
 
-  var localAPI = "api/v1/categories/" + id;
-  var method = "PUT";
-  var data = {
-    name: name
-  };
+
+  var submitButton = this,
+    nameInput = $(this).parent().parent().find('input').val(),
+    id = $(this).parent().parent().find('a').attr('id'),
+    localAPI = "api/v1/categories/" + id,
+    method = "PUT",
+    data = {
+      name: nameInput
+    };
 
   // Make AJAX call/s
   var result = fetchData(method, localAPI, data);
@@ -295,93 +391,62 @@ function editCategory(id, name) {
     .done(function(data) {
       refreshCategories();
     })
-    .fail(function(data) {
-      // display red warning
-      var errorsHtml = "";
-      $.each(data.responseJSON, function(key, value) {
-        errorsHtml += '<li>' + value[0] + '</li>'; //showing only the first error.
-      });
-      $('#errors').html('<div class="alert alert-danger" role="alert"><ul>' + errorsHtml + '</ul></div>');
-      $("#errors").fadeTo(4000, 500).slideUp(500, function() {
-        $("#errors").slideUp(500);
-      });
-      return false;
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      var errMsg = "Error: We could not edit the category. ";
+      if (jqXHR.responseJSON) {
+        $.each(jqXHR.responseJSON, function(i, item) {
+          displayError(errMsg + item);
+        });
+      } else {
+        displayError(errMsg + errorThrown);
+      }
     });
 }
 
-// Allow a user to view a category of pictures
-$(".categories").on("click", ".categoryitem", function() {
-  viewCategory($(this).text());
-  $(this).parent().find('.active').removeClass('active');
-  $(this).addClass('active');
-  $('.standalone').hide();
-  $('#grid').show();
+// login form
+var loginForm = $('#loginForm');
+loginForm.submit(function(e) {
+  e.preventDefault();
+  var formData = loginForm.serialize(),
+    localAPI = "login",
+    method = "POST",
+    data = formData;
+
+  // Make AJAX call/s
+  var result = fetchData(method, localAPI, data);
+
+  $.when(result)
+    .done(function(data) {
+      localStorage.setItem('token', data.user.api_token);
+
+      $('#loginForm').hide();
+      $('#logoutForm').show();
+      $('.input-group-btn').show();
+      $('.addcategory').show();
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      var errMsg = "Error: We could not log you in. ";
+      if (jqXHR.responseJSON) {
+        $.each(jqXHR.responseJSON, function(i, item) {
+          displayError(errMsg + item);
+        });
+      } else {
+        displayError(errMsg + errorThrown);
+      }
+    });
 });
 
-// Allow a user to view an image
-$("#grid").on("click", ".panel-body img", function() {
-  viewImage($(this).attr('id'));
-  $('.standalone').toggle();
-  $('#grid').toggle();
+// logout form
+var logoutForm = $('#logoutForm');
+logoutForm.submit(function(e) {
+  localStorage.clear(); // clear internal cookie
 });
-
-// Allow a user to go back to gallery
-$(".standalone").on("click", ".image-back", function() {
-  $('.standalone').toggle();
-  $('#grid').toggle();
-});
-
-// Toggle edit category
-function toggleEditCategory(current) {
-  current.parent().parent().find('.categoryitem').toggle();
-  current.parent().find('.category-edit').toggle();
-  current.parent().find('.category-delete').toggle();
-  current.parent().find('.category-submit').toggle();
-  current.parent().find('.category-cancel').toggle();
-  current.parent().parent().find('.category-input').toggle();
-}
-
-// Allow a user to edit or cancel edditing a category
-$(".categories").on("click", ".category-edit", function() {
-  toggleEditCategory($(this));
-});
-// Allow a user to cancel editing a category
-$(".categories").on("click", ".category-cancel", function() {
-  toggleEditCategory($(this));
-});
-// Allow a user to submit a category update
-$(".categories").on("click", ".category-submit", function() {
-  currentID = $(this).parent().parent().find('.categoryitem').attr('id');
-  nameInput = $(this).parent().parent().find('.category-input').val();
-
-  editCategory(currentID, nameInput);
-});
-// Allow a user to delete a category
-$(".categories").on("click", ".category-delete", function() {
-
-  currentID = $(this).parent().parent().find('.categoryitem').attr('id');
-  nameInput = $(this).parent().parent().find('.category-input').val();
-
-  if (confirm('Are you sure you want to delete ' + nameInput + ' category?')) {
-
-    deleteCategory(currentID);
-  }
-});
-
-// Toggle add category
-function toggleAddCategory() {
-  $("#addcate").toggle();
-  $("#addplus").toggle();
-}
 
 // Allow a user to add a category
-$(".addcategory").on("click", "#addplus :button", function() {
-  toggleAddCategory()
-});
+$("#addplus").click(toggleAddCategory);
+
 // Allow a user to cancel adding a category
-$(".addcategory").on("click", "#cancel", function() {
-  toggleAddCategory()
-});
+$("#cancel").click(toggleAddCategory);
 
 // Allow a user to create a category
 $('#add-category').on('submit', function(e) {

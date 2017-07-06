@@ -2,10 +2,10 @@
 
 namespace App\Repositories;
 
-interface APIInterface {
+interface APIInterface
+{
 
-  public function search($search);
+    public function search($search);
 
-  public function find($id);
-
+    public function find($id);
 }

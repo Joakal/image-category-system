@@ -18,7 +18,7 @@ class APIRepository implements APIInterface
         'api_key' => env('FLICKR_KEY'),
         'per_page' => 9,
         'nojsoncallback' => 1
-      ];
+        ];
         $results = $this->__callFlickAPI($arrayOfParameters);
 
         return $results;
@@ -49,14 +49,14 @@ class APIRepository implements APIInterface
     {
 
       // Lets use Guzzle!
-      $client = new Client();
+        $client = new Client();
         //
-      $response = $client->request(
-        'GET',
-        // Base URI is used with relative requests
-        'https://api.flickr.com/services/rest/',
-          // You can set any number of default request options.
-        ['query' => $arrayOfParameters]
+        $response = $client->request(
+            'GET',
+            // Base URI is used with relative requests
+            'https://api.flickr.com/services/rest/',
+            // You can set any number of default request options.
+            ['query' => $arrayOfParameters]
         );
 
         return (string) $response->getBody();
