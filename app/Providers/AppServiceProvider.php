@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-       $this->app->singleton(CategoryInterface::class, CategoryRepository::class);
-          $this->app->singleton(APIInterface::class, APIRepository::class);
+        $this->app->singleton(CategoryInterface::class, CategoryRepository::class);
+        $this->app->singleton(APIInterface::class, APIRepository::class);
     }
 }

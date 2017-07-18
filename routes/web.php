@@ -18,9 +18,4 @@ Route::get(
     }
 );
 
-Route::get(
-    'paul/{number}',
-    'PaulController@index'
-);
-
 Auth::routes();
