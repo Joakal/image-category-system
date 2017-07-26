@@ -1,18 +1,25 @@
 ## About Image Category System
 
-This interfaces with the Flickr API with use of MongoDB.
+A website that interfaces with the Flickr API with use of MongoDB.
 
 ## Requirements
 
-MongoDB 3.4.5 or higher
-PHP 7.0.18 or higher
-Composer 1.4.2 or higher
+Docker 17.06 or higher
 
-## Installatioin
+## Installation
 
-composer update
-php artisan migrate
-php artisan db:seed
+docker-compose up -d
+docker-compose exec php php artisan db:seed
+
+Navigate to http://localhost:8080/
+
+## Usage
+
+As user, click a category to see up to 9 images from Flickr and can view the details for each image.
+
+As admin,
+- you can login as admin. Email: admin@example.com Password: @nyth!ng
+- you can create, update or delete category names
 
 ## License
 

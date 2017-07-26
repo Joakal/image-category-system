@@ -1,14 +1,14 @@
 {
     "name": "joakal/imagecategorysystem",
     "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
+    "keywords": ["flickr", "laravel"],
     "license": "MIT",
     "type": "project",
     "authors": [
         {
             "name": "Andreas Markauskas",
             "email": "amarkauskas1@gmail.com",
-            "homepage": "https://github.com/joakal"
+            "homepage": "https://github.com/Joakal/image-category-system"
         }
     ],
     "require": {

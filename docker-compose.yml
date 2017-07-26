@@ -1,0 +1,42 @@
+version: '2'
+
+volumes:
+    database_data:
+        driver: local
+
+services:
+  nginx:
+      image: nginx:1.13.3
+      ports:
+          - 8080:80
+      volumes:
+          - ./docker/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+      working_dir: /var/www
+      volumes_from:
+          - php
+  php:
+      build: .
+      expose:
+          - 9000
+      volumes:
+          - .:/var/www/html
+      environment:
+          - "DB_HOST=mongodb"
+          - "DB_PORT=27017"
+  mysql:
+      image: mysql:5.7.19
+      expose:
+          - 3306
+      volumes:
+          - database_data:/var/lib/mysql
+      environment:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: project
+          MYSQL_USER: project
+          MYSQL_PASSWORD: project
+  mongodb:
+      image: mongo:3.4.6
+      expose:
+        - 27017
+      volumes:
+        - /srv/docker/mongodb:/var/lib/mongodb
