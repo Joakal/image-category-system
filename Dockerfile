@@ -22,12 +22,16 @@ RUN docker-php-ext-install mbstring
 RUN pecl install mongodb-1.2.9 \
     && docker-php-ext-enable mongodb
 
+# add the application to the container
+COPY . /var/www/html
+COPY .env.example .env
+
 RUN curl -sS https://getcomposer.org/installer | \
     php -- --install-dir=/usr/bin/ --filename=composer
-COPY composer.json ./
-COPY composer.lock ./
 RUN composer install --no-scripts --no-autoloader
-COPY .env.example ..env
+RUN composer update
+RUN php artisan key:generate
+RUN chown -R www-data:www-data /var/www/html
 
 RUN apt-get remove --purge curl -y && \
   apt-get clean
