@@ -11,6 +11,8 @@ services:
         dockerfile: web.dockerfile
       ports:
           - 8080:80
+      links:
+          - php
   mongodb:
       image: mongo:3.4.6
       expose:
@@ -27,5 +29,4 @@ services:
           - "DB_HOST=mongodb"
           - "DB_PORT=27017"
       links:
-          - mysql
           - mongodb
