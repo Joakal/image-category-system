@@ -28,8 +28,8 @@ COPY .env.example .env
 
 RUN curl -sS https://getcomposer.org/installer | \
     php -- --install-dir=/usr/bin/ --filename=composer
-RUN composer install --no-scripts --no-autoloader
-RUN composer update
+RUN composer install --no-dev
+RUN php artisan optimize
 RUN php artisan key:generate
 RUN chown -R www-data:www-data /var/www/html
 
