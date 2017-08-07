@@ -8,8 +8,8 @@ Docker 17.06 or higher
 
 ## Installation
 
-docker-compose up -d
-docker-compose exec php php artisan db:seed
+- docker-compose up -d
+- docker-compose exec php php artisan db:seed
 
 Navigate to http://localhost:8080/
 
